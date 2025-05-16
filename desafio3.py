@@ -20,6 +20,13 @@ class PessoaFisica(Cliente):
         self.data_nascimento = data_nascimento
         self.cpf = cpf
 
+    def __str__(self):
+        return f"""\
+            Nome:\t{self.nome}
+            CPF\t\t{self.cpf}
+            Data de Nascimento:\t{self.data_nascimento}
+        """
+
 class Conta():
     def __init__(self, numero, cliente):
         self._saldo = 0
@@ -172,7 +179,7 @@ def menu():
     => """
     return input(textwrap.dedent(menu))
 
-def recuper_conta_cliente(cliente):
+def recuperar_conta_cliente(cliente):
     if not cliente.contas:
         print("\n@@@ Cliente não possui conta! @@@")
         return
@@ -216,12 +223,16 @@ def sacar(clientes):
     cliente.realizar_transacao(conta, transacao)
 
 
-def exibir_extrato(saldo, /, *, extrato):
+def exibir_extrato(clientes):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
 
     if not(cliente):
         print("\n@@@ Cliente não encontrado! @@@")
+        return
+    
+    conta = recuperar_conta_cliente(cliente)
+    if not conta:
         return
 
     print("\n================EXTRATO==================")
@@ -251,7 +262,7 @@ def criar_cliente(clientes):
     data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
     endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
 
-    cliente = PessoaFisica(nome=nome, data_nascimento = data_nascimento, endereco = endereco)
+    cliente = PessoaFisica(nome=nome, data_nascimento = data_nascimento, cpf= cpf, endereco = endereco)
 
     clientes.append(cliente)
 
@@ -271,24 +282,21 @@ def criar_conta(numero_conta, clientes, contas):
         print("\n@@@ Cliente não encontrado! Fluo de criação de conta encerrado @@@")
         return
     conta = ContaCorrente.nova_conta(cliente=cliente, numero = numero_conta)
+    contas.append(conta)
     cliente.contas.append(conta)
     print("\n=== Conta criada com sucesso! ===")
 
 
 def listar_contas(contas):
+    print(contas)
     for conta in contas:
         print("=" * 100)
         print(textwrap.dedent(str(conta)))
       
-def listar_usuarios(usuarios):
-    for usuario in usuarios:
-        linha = f"""\
-            Agência:\t{conta['agencia']}
-            C/C:\t\t{conta['numero_conta']}
-            Titular:\t{conta['usuario']['nome']}
-        """
+def listar_usuarios(clientes):
+    for cliente in clientes:
         print("=" * 100)
-        print(textwrap.dedent(linha))
+        print(textwrap.dedent(str(cliente)))
 
 
 def main():
@@ -303,32 +311,23 @@ def main():
             depositar(clientes)
 
         elif opcao == "s":
-            valor = float(input("Informe o valor do saque: "))
-
-            saldo, extrato = sacar(
-                saldo=saldo,
-                valor=valor,
-                extrato=extrato,
-                limite=limite,
-                numero_saques=numero_saques,
-                limite_saques=LIMITE_SAQUES,
-            )
+            sacar(clientes)
 
         elif opcao == "e":
-            exibir_extrato(saldo, extrato=extrato)
+            exibir_extrato(clientes)
 
         elif opcao == "nu":
-            criar_usuario(usuarios)
+            criar_cliente(clientes)
 
         elif opcao == "nc":
             numero_conta = len(contas) + 1
-            conta = criar_conta(AGENCIA, numero_conta, usuarios)
-
-            if conta:
-                contas.append(conta)
+            criar_conta(numero_conta, clientes, contas)
 
         elif opcao == "lc":
             listar_contas(contas)
+
+        elif opcao == "lu":
+            listar_usuarios(clientes)
 
         elif opcao == "q":
             break
